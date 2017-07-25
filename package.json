@@ -1,0 +1,24 @@
+{
+  "name": "qunit-in-browser",
+  "version": "0.1.0",
+  "description": "A QUnit-CLI plugin for testing applications in the browser",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trentmwillis/qunit-in-browser.git"
+  },
+  "keywords": [
+    "qunit",
+    "testing",
+    "end-to-end"
+  ],
+  "author": "Trent M. Willis <trentmwillis@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/trentmwillis/qunit-in-browser/issues"
+  },
+  "homepage": "https://github.com/trentmwillis/qunit-in-browser#readme"
+}
