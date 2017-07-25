@@ -20,5 +20,9 @@
   "bugs": {
     "url": "https://github.com/trentmwillis/qunit-in-browser/issues"
   },
-  "homepage": "https://github.com/trentmwillis/qunit-in-browser#readme"
+  "homepage": "https://github.com/trentmwillis/qunit-in-browser#readme",
+  "dependencies": {
+    "chrome-launcher": "^0.3.2",
+    "chrome-remote-interface": "^0.24.2"
+  }
 }
