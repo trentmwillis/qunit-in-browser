@@ -23,6 +23,10 @@
   "homepage": "https://github.com/trentmwillis/qunit-in-browser#readme",
   "dependencies": {
     "chrome-launcher": "^0.3.2",
-    "chrome-remote-interface": "^0.24.2"
+    "chrome-remote-interface": "^0.24.2",
+    "chrome-remote-multiplex": "^0.1.6"
+  },
+  "devDependencies": {
+    "qunitjs": "^2.0.0"
   }
 }

@@ -1,5 +1,6 @@
 const ChromeRemoteInterface = require('chrome-remote-interface');
 const ChromeLauncher = require('chrome-launcher');
+var MultiplexServer = require('chrome-remote-multiplex').MultiplexServer;
 const fs = require('fs');
 const path = require('path');
 
@@ -8,13 +9,39 @@ async function injectScript(Runtime, script, options) {
   return await Runtime.evaluate(runtimeOptions);
 }
 
+async function openDevTools(chromePort, multiplexerPort) {
+
+  const targets = await ChromeRemoteInterface.List({ port: multiplexerPort });
+  const targetUnderTest = targets[targets.length - 1];
+
+  const debuggerTarget = await ChromeRemoteInterface.New({ port: multiplexerPort });
+  const debuggerInterface = await ChromeRemoteInterface({ target: debuggerTarget });
+
+  const { Page } = debuggerInterface;
+  await Page.navigate({ url: `http://localhost:${chromePort}${targetUnderTest.devtoolsFrontendUrl}` });
+
+}
+
 async function inBrowserTest(url, test) {
-  const chrome = await ChromeLauncher.launch({
-    startingUrl: url
+  const isDebugging = test.toString().indexOf('debugger') !== -1;
+
+  // Launch Chrome
+  const chrome = await ChromeLauncher.launch();
+
+  // Setup multiplexer for connecting the remote interface and devtools
+  const multiplexer = new MultiplexServer({
+    remoteClient: `localhost:${chrome.port}`,
+    listenPort: chrome.port + 1
   });
+  await multiplexer.listen();
+
   const chromeInterface = await ChromeRemoteInterface({
-    port: chrome.port
+    port: multiplexer.options.listenPort
   });
+
+  if (isDebugging) {
+    await openDevTools(chrome.port, multiplexer.options.listenPort);
+  }
 
   const {
     Page,
@@ -22,6 +49,7 @@ async function inBrowserTest(url, test) {
   } = chromeInterface;
 
   await Page.enable();
+  await Page.navigate({ url});
   await Page.loadEventFired();
 
   // Construct test scripts to inject into page
@@ -38,7 +66,7 @@ async function inBrowserTest(url, test) {
     new Promise((resolve) => {
       QUnit.on('runEnd', (data) => resolve(JSON.stringify(data)));
       QUnit.test('testing', ${test});
-      ${test.toString().indexOf('debugger') === -1 ? 'QUnit.start();' : ''}
+      QUnit.start();
     });
   `;
 
