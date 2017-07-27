@@ -29,16 +29,21 @@ function inBrowser(description: string; options: string|InBrowserOptions; test: 
 interface InBrowserOptions {
   url: string;
   injections: Array<string>;
+  server: () => Promise<Server>;
+}
+
+interface Server {
+  close: () => any;
 }
 ```
 
 * `url` - A string path to navigate the browser to for the test.
 * `injections` - An array of string paths to files to be injected alongside the test code. The paths are resolved relative to the current working directory (`cwd`) for injection unless absolute paths are used.
+* `server` - A function to start a server in case one is needed to test your code. The function should return a `Promise` that resolves when the server is ready to accept requests. It should resolve with an object representing the server including a `close` method to shutdown the server once the test has concluded. Alternatively, you can start a server externally and then run your tests.
 
 ## Todo
 
 The following are the features to implement before an initial release:
 
 1. Detailed test feedback (we have all the test run info, we should present it to the user)
-2. Support for server start command
-3. Tests for the codebase
+2. Tests for the codebase

@@ -36,6 +36,11 @@ async function injectScriptsFromPaths(Runtime, paths) {
 
 async function inBrowserTest(options, test) {
   const isDebugging = test.toString().indexOf('debugger') !== -1;
+  let server;
+
+  if (typeof options.server === 'function') {
+    server = await options.server();
+  }
 
   // Launch Chrome
   const chrome = await ChromeLauncher.launch();
@@ -97,6 +102,10 @@ async function inBrowserTest(options, test) {
   chromeInterface.close();
   multiplexer.close();
   chrome.kill();
+
+  if (server) {
+    server.close();
+  }
 
   return testResult;
 }
