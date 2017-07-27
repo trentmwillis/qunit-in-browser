@@ -1,8 +1,16 @@
 const inBrowserTest = require('./src/in-browser-test.js');
 
-QUnit.test.inBrowser = function inBrowser(description, url, test) {
+module.exports = function inBrowser(description, options, test) {
   QUnit.test(description, async function(assert) {
-    const result = await inBrowserTest(url, test);
+    let actualOptions = options;
+
+    if (typeof actualOptions === 'string') {
+      actualOptions = {
+        url: actualOptions
+      };
+    }
+
+    const result = await inBrowserTest(actualOptions, test);
 
     const errors = result.tests[0].errors;
     if (errors.length) {

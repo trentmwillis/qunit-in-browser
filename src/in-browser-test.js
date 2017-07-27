@@ -24,7 +24,7 @@ async function openDevTools(chromePort, multiplexerPort) {
 
 }
 
-async function inBrowserTest(url, test) {
+async function inBrowserTest(options, test) {
   const isDebugging = test.toString().indexOf('debugger') !== -1;
 
   // Launch Chrome
@@ -51,7 +51,7 @@ async function inBrowserTest(url, test) {
   } = chromeInterface;
 
   await Page.enable();
-  await Page.navigate({ url});
+  await Page.navigate({ url: options.url });
   await Page.loadEventFired();
 
   // Construct test scripts to inject into page

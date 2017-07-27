@@ -5,6 +5,8 @@ QUnit-In-Browser is a plugin for [QUnit](http://qunitjs.com/)'s CLI that enables
 ## Example
 
 ```js
+QUnit.test.inBrowser = require('qunit-in-browser');
+
 QUnit.test.inBrowser('Home page successfully renders', 'https://localhost:8000/', function(assert) {
   const content = document.getElementById('content');
   assert.ok(content, 'main content is rendered!');
@@ -16,6 +18,18 @@ QUnit.test.inBrowser('Home page successfully renders', 'https://localhost:8000/'
 QUnit-In-Browser will detect when a [`debugger` statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/debugger) is present in your code and open a [Chrome DevTools](https://developers.google.com/web/tools/chrome-devtools/) instance alongside the running test. This makes it easy to debug your tests in a similar fashion to how you would most likely normally debug your application.
 
 Note: The DevTools instance will open in a separate browser tab. This is to work around a limitation in the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/#simultaneous) which prevents the QUnit-In-Browser client and the DevTools from simultaneously, directly connecting to the page under test.
+
+## API
+
+```ts
+function inBrowser(description: string; options: string|InBrowserOptions; test: function);
+```
+
+```ts
+interface InBrowserOptions {
+  url: string;
+}
+```
 
 ## Todo
 
