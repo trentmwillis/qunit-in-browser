@@ -28,14 +28,17 @@ function inBrowser(description: string; options: string|InBrowserOptions; test: 
 ```ts
 interface InBrowserOptions {
   url: string;
+  injections: Array<string>;
 }
 ```
+
+* `url` - A string path to navigate the browser to for the test.
+* `injections` - An array of string paths to files to be injected alongside the test code. The paths are resolved relative to the current working directory (`cwd`) for injection unless absolute paths are used.
 
 ## Todo
 
 The following are the features to implement before an initial release:
 
-1. Ability to inject user-specified files into the runtime (primarily helper code)
-2. Detailed test feedback (we have all the test run info, we should present it to the user)
-3. Support for server start command
-4. Tests for the codebase
+1. Detailed test feedback (we have all the test run info, we should present it to the user)
+2. Support for server start command
+3. Tests for the codebase

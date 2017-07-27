@@ -1,6 +1,7 @@
 const ChromeRemoteInterface = require('chrome-remote-interface');
 const ChromeLauncher = require('chrome-launcher');
 const MultiplexServer = require('chrome-remote-multiplex').MultiplexServer;
+
 const fs = require('fs');
 const path = require('path');
 
@@ -22,6 +23,15 @@ async function openDevTools(chromePort, multiplexerPort) {
 
   debuggerInterface.close();
 
+}
+
+async function injectScriptsFromPaths(Runtime, paths) {
+  for (let i = 0; i < paths.length; i++) {
+    const resolvedPath = path.resolve(paths[i]);
+    const script = fs.readFileSync(resolvedPath, 'utf-8');
+
+    await injectScript(Runtime, script);
+  }
 }
 
 async function inBrowserTest(options, test) {
@@ -75,6 +85,11 @@ async function inBrowserTest(options, test) {
   // Evaluate test scripts in page
   await injectScript(Runtime, qunitConfig);
   await injectScript(Runtime, qunit);
+
+  const injections = options.injections;
+  if (injections) {
+    await injectScriptsFromPaths(Runtime, injections);
+  }
 
   const testData = await injectScript(Runtime, testScript, { awaitPromise: true });
   const testResult = JSON.parse(testData.result.value);
