@@ -1,6 +1,6 @@
 const ChromeRemoteInterface = require('chrome-remote-interface');
 const ChromeLauncher = require('chrome-launcher');
-var MultiplexServer = require('chrome-remote-multiplex').MultiplexServer;
+const MultiplexServer = require('chrome-remote-multiplex').MultiplexServer;
 const fs = require('fs');
 const path = require('path');
 
@@ -19,6 +19,8 @@ async function openDevTools(chromePort, multiplexerPort) {
 
   const { Page } = debuggerInterface;
   await Page.navigate({ url: `http://localhost:${chromePort}${targetUnderTest.devtoolsFrontendUrl}` });
+
+  debuggerInterface.close();
 
 }
 
@@ -78,6 +80,7 @@ async function inBrowserTest(url, test) {
   const testResult = JSON.parse(testData.result.value);
 
   chromeInterface.close();
+  multiplexer.close();
   chrome.kill();
 
   return testResult;
