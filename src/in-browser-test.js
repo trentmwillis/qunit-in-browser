@@ -79,13 +79,7 @@ async function inBrowserTest(options, test) {
   `;
   const qunitPath = require.resolve('qunitjs');
   const qunit = fs.readFileSync(qunitPath, 'utf-8');
-  const testScript = `
-    new Promise((resolve) => {
-      QUnit.on('runEnd', (data) => resolve(JSON.stringify(data)));
-      QUnit.test('testing', ${test});
-      QUnit.start();
-    });
-  `;
+  const testScript = fs.readFileSync(path.resolve(__dirname, './injections/test-script.js'), 'utf-8').replace('TEST_FUNCTION', test.toString());
 
   // Evaluate test scripts in page
   await injectScript(Runtime, qunitConfig);
@@ -96,8 +90,8 @@ async function inBrowserTest(options, test) {
     await injectScriptsFromPaths(Runtime, injections);
   }
 
-  const testData = await injectScript(Runtime, testScript, { awaitPromise: true });
-  const testResult = JSON.parse(testData.result.value);
+  const testResult = await injectScript(Runtime, testScript, { awaitPromise: true });
+  const testData = JSON.parse(testResult.result.value);
 
   chromeInterface.close();
   multiplexer.close();
@@ -107,7 +101,7 @@ async function inBrowserTest(options, test) {
     server.close();
   }
 
-  return testResult;
+  return testData;
 }
 
 module.exports = inBrowserTest;

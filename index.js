@@ -10,13 +10,15 @@ module.exports = function inBrowser(description, options, test) {
       };
     }
 
-    const result = await inBrowserTest(actualOptions, test);
-
-    const errors = result.tests[0].errors;
-    if (errors.length) {
-      errors.forEach((error) => console.log(error.message));
-    }
-
-    assert.equal(result.status, 'passed');
+    const assertions = await inBrowserTest(actualOptions, test);
+    assertions.forEach((assertion) => {
+      assert.pushResult({
+        result: assertion.passed,
+        actual: assertion.actual,
+        expected: assertion.expected,
+        message: assertion.message,
+        source: assertion.source
+      });
+    });
   });
 };
