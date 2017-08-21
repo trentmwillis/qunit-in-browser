@@ -43,7 +43,8 @@ async function inBrowserTest(options, test) {
   }
 
   // Launch Chrome
-  const chrome = await ChromeLauncher.launch();
+  const chromeOptions = options.browser || {};
+  const chrome = await ChromeLauncher.launch(chromeOptions);
 
   // Setup multiplexer for connecting the remote interface and devtools
   const multiplexer = new MultiplexServer({

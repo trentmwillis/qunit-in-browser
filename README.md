@@ -27,9 +27,10 @@ function inBrowser(description: string; options: string|InBrowserOptions; test: 
 
 ```ts
 interface InBrowserOptions {
-  url: string;
+  browser: Object;
   injections: Array<string>;
   server: () => Promise<Server>;
+  url: string;
 }
 
 interface Server {
@@ -39,9 +40,10 @@ interface Server {
 
 ### Options Details
 
-* `url` - A string path to navigate the browser to for the test.
+* `browser` - Options to be used when launching the browser. For details, refer to [the options provided by `chrome-launcher`](https://www.npmjs.com/package/chrome-launcher#launchopts).
 * `injections` - An array of string paths to files to be injected alongside the test code. The paths are resolved relative to the current working directory (`cwd`) for injection unless absolute paths are used.
 * `server` - A function to start a server in case one is needed to test your code. The function should return a `Promise` that resolves when the server is ready to accept requests. It should resolve with an object representing the server including a `close` method to shutdown the server once the test has concluded. Alternatively, you can start a server externally and then run your tests.
+* `url` - A string path to navigate the browser to for the test.
 
 ## Debugging
 
