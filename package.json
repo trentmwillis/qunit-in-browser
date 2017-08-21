@@ -1,6 +1,6 @@
 {
   "name": "qunit-in-browser",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A QUnit-CLI plugin for testing applications in the browser",
   "main": "index.js",
   "scripts": {
