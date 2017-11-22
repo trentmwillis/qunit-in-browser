@@ -1,0 +1,18 @@
+language: node_js
+
+node_js:
+  - "8"
+
+addons:
+  chrome: stable
+
+branches:
+  only:
+    - master
+
+cache:
+  directories:
+    - $HOME/.npm
+
+script:
+  - npm run test

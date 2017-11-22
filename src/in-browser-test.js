@@ -3,6 +3,7 @@ const ChromeLauncher = require('chrome-launcher');
 const MultiplexServer = require('chrome-remote-multiplex').MultiplexServer;
 
 const fs = require('fs');
+const isCI = require('is-ci');
 const path = require('path');
 
 async function injectScript(Runtime, script, options) {
@@ -44,6 +45,12 @@ async function inBrowserTest(options, test) {
 
   // Launch Chrome
   const chromeOptions = options.browser || {};
+
+  if (isCI) {
+    chromeOptions.chromeFlags = chromeOptions.chromeFlags || [];
+    chromeOptions.chromeFlags.push('--headless', '--disable-gpu');
+  }
+
   const chrome = await ChromeLauncher.launch(chromeOptions);
 
   // Setup multiplexer for connecting the remote interface and devtools
@@ -78,7 +85,7 @@ async function inBrowserTest(options, test) {
       }
     };
   `;
-  const qunitPath = require.resolve('qunitjs');
+  const qunitPath = require.resolve('qunit');
   const qunit = fs.readFileSync(qunitPath, 'utf-8');
   const testScript = fs.readFileSync(path.resolve(__dirname, './injections/test-script.js'), 'utf-8').replace('TEST_FUNCTION', test.toString());
 
