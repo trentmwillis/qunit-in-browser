@@ -15,4 +15,5 @@ cache:
     - $HOME/.npm
 
 script:
+  - npm run lint
   - npm run test

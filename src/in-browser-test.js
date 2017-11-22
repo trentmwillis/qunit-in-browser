@@ -1,14 +1,16 @@
 const ChromeRemoteInterface = require('chrome-remote-interface');
 const ChromeLauncher = require('chrome-launcher');
-const MultiplexServer = require('chrome-remote-multiplex').MultiplexServer;
+const { MultiplexServer } = require('chrome-remote-multiplex');
 
 const fs = require('fs');
 const isCI = require('is-ci');
 const path = require('path');
 
 async function injectScript(Runtime, script, options) {
+
   const runtimeOptions = Object.assign({ expression: script }, options);
-  return await Runtime.evaluate(runtimeOptions);
+  return Runtime.evaluate(runtimeOptions);
+
 }
 
 async function openDevTools(chromePort, multiplexerPort) {
@@ -27,28 +29,37 @@ async function openDevTools(chromePort, multiplexerPort) {
 }
 
 async function injectScriptsFromPaths(Runtime, paths) {
+
   for (let i = 0; i < paths.length; i++) {
+
     const resolvedPath = path.resolve(paths[i]);
     const script = fs.readFileSync(resolvedPath, 'utf-8');
 
-    await injectScript(Runtime, script);
+    await injectScript(Runtime, script); // eslint-disable-line no-await-in-loop
+
   }
+
 }
 
 async function inBrowserTest(options, test) {
+
   const isDebugging = test.toString().indexOf('debugger') !== -1;
   let server;
 
   if (typeof options.server === 'function') {
+
     server = await options.server();
+
   }
 
   // Launch Chrome
   const chromeOptions = options.browser || {};
 
   if (isCI) {
+
     chromeOptions.chromeFlags = chromeOptions.chromeFlags || [];
     chromeOptions.chromeFlags.push('--headless', '--disable-gpu');
+
   }
 
   const chrome = await ChromeLauncher.launch(chromeOptions);
@@ -56,21 +67,23 @@ async function inBrowserTest(options, test) {
   // Setup multiplexer for connecting the remote interface and devtools
   const multiplexer = new MultiplexServer({
     remoteClient: `localhost:${chrome.port}`,
-    listenPort: chrome.port + 1
+    listenPort: chrome.port + 1,
   });
   await multiplexer.listen();
 
   const chromeInterface = await ChromeRemoteInterface({
-    port: multiplexer.options.listenPort
+    port: multiplexer.options.listenPort,
   });
 
   if (isDebugging) {
+
     await openDevTools(chrome.port, multiplexer.options.listenPort);
+
   }
 
   const {
     Page,
-    Runtime
+    Runtime,
   } = chromeInterface;
 
   await Page.enable();
@@ -93,9 +106,11 @@ async function inBrowserTest(options, test) {
   await injectScript(Runtime, qunitConfig);
   await injectScript(Runtime, qunit);
 
-  const injections = options.injections;
+  const { injections } = options;
   if (injections) {
+
     await injectScriptsFromPaths(Runtime, injections);
+
   }
 
   const testResult = await injectScript(Runtime, testScript, { awaitPromise: true });
@@ -106,10 +121,13 @@ async function inBrowserTest(options, test) {
   chrome.kill();
 
   if (server) {
+
     server.close();
+
   }
 
   return testData;
+
 }
 
 module.exports = inBrowserTest;
