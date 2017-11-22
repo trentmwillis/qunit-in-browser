@@ -78,7 +78,7 @@ async function inBrowserTest(options, test) {
       }
     };
   `;
-  const qunitPath = require.resolve('qunitjs');
+  const qunitPath = require.resolve('qunit');
   const qunit = fs.readFileSync(qunitPath, 'utf-8');
   const testScript = fs.readFileSync(path.resolve(__dirname, './injections/test-script.js'), 'utf-8').replace('TEST_FUNCTION', test.toString());
 

@@ -27,6 +27,6 @@
     "chrome-remote-multiplex": "^0.1.8"
   },
   "devDependencies": {
-    "qunitjs": "^2.0.0"
+    "qunit": "^2.4.1"
   }
 }
