@@ -1,5 +1,7 @@
 # QUnit-In-Browser
 
+[![Build Status](https://travis-ci.org/trentmwillis/qunit-in-browser.svg?branch=master)](https://travis-ci.org/trentmwillis/qunit-in-browser)
+
 QUnit-In-Browser is a plugin for [QUnit](http://qunitjs.com/)'s CLI that enables you to easily test applications in a web browser. It allows you to write QUnit tests that can run against an actual webpage by being injected into the runtime. This enables you to use the same tools for your end-to-end tests that you are already using for your unit tests!
 
 ```bash
