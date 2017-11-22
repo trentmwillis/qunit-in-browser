@@ -4,7 +4,7 @@
   "description": "A QUnit-CLI plugin for testing applications in the browser",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "qunit tests/tests.js"
   },
   "repository": {
     "type": "git",
@@ -27,6 +27,8 @@
     "chrome-remote-multiplex": "^0.1.8"
   },
   "devDependencies": {
+    "axe-core": "^2.5.0",
+    "express": "^4.16.2",
     "qunit": "^2.4.1"
   }
 }
