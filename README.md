@@ -5,6 +5,10 @@
 
 QUnit-In-Browser is a plugin for [QUnit](http://qunitjs.com/)'s CLI that enables you to easily test applications in a web browser. It allows you to write QUnit tests that can run against an actual webpage by being injected into the runtime. This enables you to use the same tools for your end-to-end tests that you are already using for your unit tests!
 
+For more background on the _what, why, and how_ of QUnit-In-Browser, check out [this blog post](https://pretty-okay.com/2017/12/04/qunit-in-browser).
+
+To get started using QUnit-In-Browser, install it via npm:
+
 ```bash
 npm install --save-dev qunit-in-browser
 ```
