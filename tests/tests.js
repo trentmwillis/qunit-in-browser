@@ -1,4 +1,4 @@
-/* global document, window, axe */
+/* global document, axe */
 /* eslint-disable prefer-arrow-callback, func-names */
 
 const path = require('path');
@@ -34,22 +34,6 @@ QUnit.test.inBrowser('can inject other files into the test with cwd-relative pat
   const results = await axe.run();
   assert.equal(results.violations.length, 0);
   assert.equal(document.body.innerText, 'Hello world!');
-
-});
-
-QUnit.test.inBrowser('can pass options to the browser launcher', {
-  url: `file:${fixturePath}/index.html`,
-  browser: {
-    chromeFlags: [
-      '--headless',
-      '--disable-gpu',
-    ],
-  },
-}, function(assert) {
-
-  // Check UA to make sure we're in headless mode
-  assert.equal(document.body.innerText, 'Hello world!');
-  assert.ok(/HeadlessChrome/.test(window.navigator.userAgent));
 
 });
 

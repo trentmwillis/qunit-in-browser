@@ -1,41 +1,22 @@
-const ChromeRemoteInterface = require('chrome-remote-interface');
-const ChromeLauncher = require('chrome-launcher');
-const { MultiplexServer } = require('chrome-remote-multiplex');
+const puppeteer = require('puppeteer');
 
 const fs = require('fs');
-const isCI = require('is-ci');
 const path = require('path');
 
-async function injectScript(Runtime, script, options) {
+async function injectScript(page, script) {
 
-  const runtimeOptions = Object.assign({ expression: script }, options);
-  return Runtime.evaluate(runtimeOptions);
-
-}
-
-async function openDevTools(chromePort, multiplexerPort) {
-
-  const targets = await ChromeRemoteInterface.List({ port: multiplexerPort });
-  const targetUnderTest = targets[targets.length - 1];
-
-  const debuggerTarget = await ChromeRemoteInterface.New({ port: multiplexerPort });
-  const debuggerInterface = await ChromeRemoteInterface({ target: debuggerTarget });
-
-  const { Page } = debuggerInterface;
-  await Page.navigate({ url: `http://localhost:${chromePort}${targetUnderTest.devtoolsFrontendUrl}` });
-
-  debuggerInterface.close();
+  return page.evaluate(script);
 
 }
 
-async function injectScriptsFromPaths(Runtime, paths) {
+async function injectScriptsFromPaths(page, paths) {
 
   for (let i = 0; i < paths.length; i++) {
 
     const resolvedPath = path.resolve(paths[i]);
     const script = fs.readFileSync(resolvedPath, 'utf-8');
 
-    await injectScript(Runtime, script); // eslint-disable-line no-await-in-loop
+    await injectScript(page, script); // eslint-disable-line no-await-in-loop
 
   }
 
@@ -53,42 +34,16 @@ async function inBrowserTest(options, test) {
   }
 
   // Launch Chrome
-  const chromeOptions = options.browser || {};
+  const chromeOptions = Object.assign({
+    devtools: isDebugging,
+  }, options.browser);
 
-  if (isCI) {
+  const browser = await puppeteer.launch(chromeOptions);
 
-    chromeOptions.chromeFlags = chromeOptions.chromeFlags || [];
-    chromeOptions.chromeFlags.push('--headless', '--disable-gpu');
+  const pages = await browser.pages();
+  const page = pages[0];
 
-  }
-
-  const chrome = await ChromeLauncher.launch(chromeOptions);
-
-  // Setup multiplexer for connecting the remote interface and devtools
-  const multiplexer = new MultiplexServer({
-    remoteClient: `localhost:${chrome.port}`,
-    listenPort: chrome.port + 1,
-  });
-  await multiplexer.listen();
-
-  const chromeInterface = await ChromeRemoteInterface({
-    port: multiplexer.options.listenPort,
-  });
-
-  if (isDebugging) {
-
-    await openDevTools(chrome.port, multiplexer.options.listenPort);
-
-  }
-
-  const {
-    Page,
-    Runtime,
-  } = chromeInterface;
-
-  await Page.enable();
-  await Page.navigate({ url: options.url });
-  await Page.loadEventFired();
+  await page.goto(options.url);
 
   // Construct test scripts to inject into page
   const qunitConfig = `
@@ -103,22 +58,21 @@ async function inBrowserTest(options, test) {
   const testScript = fs.readFileSync(path.resolve(__dirname, './injections/test-script.js'), 'utf-8').replace('TEST_FUNCTION', test.toString());
 
   // Evaluate test scripts in page
-  await injectScript(Runtime, qunitConfig);
-  await injectScript(Runtime, qunit);
+  await injectScript(page, qunitConfig);
+  await injectScript(page, qunit);
 
   const { injections } = options;
   if (injections) {
 
-    await injectScriptsFromPaths(Runtime, injections);
+    await injectScriptsFromPaths(page, injections);
 
   }
 
-  const testResult = await injectScript(Runtime, testScript, { awaitPromise: true });
-  const testData = JSON.parse(testResult.result.value);
+  const testResult = await injectScript(page, testScript);
+  const testData = JSON.parse(testResult);
 
-  chromeInterface.close();
-  multiplexer.close();
-  chrome.kill();
+  await page.close();
+  await browser.close();
 
   if (server) {
 
