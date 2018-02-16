@@ -39,6 +39,7 @@ interface InBrowserOptions {
   server: () => Promise<Server>;
   url: string;
   measureCodeUsage: boolean;
+  measurePerformance: boolean;
 }
 
 interface Server {
@@ -53,6 +54,7 @@ interface Server {
 * `server` - A function to start a server in case one is needed to test your code. The function should return a `Promise` that resolves when the server is ready to accept requests. It should resolve with an object representing the server including a `close` method to shutdown the server once the test has concluded. Alternatively, you can start a server externally and then run your tests.
 * `url` - A string path to navigate the browser to for the test.
 * `measureCodeUsage` - A boolean denoting whether or not to record code usage stats for the test. The stats will be output in `.qunit-in-browser/code-usage.json` as well as logged to the console.
+* `measurePerformance` - A boolean indicating whether or not to record performance statistics for the test. The stats will be output in `.qunit-in-browser/performance.json` as well logged to the console.
 
 ## Debugging
 

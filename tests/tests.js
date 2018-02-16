@@ -82,3 +82,31 @@ QUnit.test('verify code usage measurements do exist after test', function(assert
   fs.removeSync('.qunit-in-browser');
 
 });
+
+QUnit.test('verify code performance measurements do not exist', function(assert) {
+
+  fs.removeSync('.qunit-in-browser');
+  assert.notOk(fs.existsSync('.qunit-in-browser/performance.json'));
+
+});
+
+QUnit.test.inBrowser('can measure code performance and record it', {
+  url: `file:${fixturePath}/index.html`,
+  measurePerformance: true,
+}, function(assert) {
+
+  debugger;
+
+  assert.equal(document.body.innerText, 'Hello world!');
+
+});
+
+QUnit.test('verify code performance measurements do exist after test', function(assert) {
+
+  const performanceMetrics = fs.readJsonSync('.qunit-in-browser/performance.json');
+  assert.equal(typeof performanceMetrics, 'object');
+  assert.equal(typeof performanceMetrics.pageMetrics, 'object');
+  assert.equal(typeof performanceMetrics.pageTimings, 'object');
+  fs.removeSync('.qunit-in-browser');
+
+});

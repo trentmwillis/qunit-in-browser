@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const CodeUsage = require('./code-usage');
+const Performance = require('./performance');
 
 async function injectScript(page, script) {
 
@@ -78,6 +79,12 @@ async function inBrowserTest(options, test) {
 
   const testResult = await injectScript(page, testScript);
   const testData = JSON.parse(testResult);
+
+  if (options.measurePerformance) {
+
+    await Performance.recordPerformance(page);
+
+  }
 
   if (options.measureCodeUsage) {
 
