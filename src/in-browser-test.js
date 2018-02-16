@@ -3,6 +3,8 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 
+const CodeUsage = require('./code-usage');
+
 async function injectScript(page, script) {
 
   return page.evaluate(script);
@@ -43,6 +45,12 @@ async function inBrowserTest(options, test) {
   const pages = await browser.pages();
   const page = pages[0];
 
+  if (options.measureCodeUsage) {
+
+    await CodeUsage.startRecordingCodeUsage(page);
+
+  }
+
   await page.goto(options.url);
 
   // Construct test scripts to inject into page
@@ -70,6 +78,12 @@ async function inBrowserTest(options, test) {
 
   const testResult = await injectScript(page, testScript);
   const testData = JSON.parse(testResult);
+
+  if (options.measureCodeUsage) {
+
+    await CodeUsage.stopRecordingCodeUsage(page);
+
+  }
 
   await page.close();
   await browser.close();

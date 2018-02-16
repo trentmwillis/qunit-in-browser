@@ -38,6 +38,7 @@ interface InBrowserOptions {
   injections: Array<string>;
   server: () => Promise<Server>;
   url: string;
+  measureCodeUsage: boolean;
 }
 
 interface Server {
@@ -51,6 +52,7 @@ interface Server {
 * `injections` - An array of string paths to files to be injected alongside the test code. The paths are resolved relative to the current working directory (`cwd`) for injection unless absolute paths are used.
 * `server` - A function to start a server in case one is needed to test your code. The function should return a `Promise` that resolves when the server is ready to accept requests. It should resolve with an object representing the server including a `close` method to shutdown the server once the test has concluded. Alternatively, you can start a server externally and then run your tests.
 * `url` - A string path to navigate the browser to for the test.
+* `measureCodeUsage` - A boolean denoting whether or not to record code usage stats for the test. The stats will be output in `.qunit-in-browser/code-usage.json` as well as logged to the console.
 
 ## Debugging
 

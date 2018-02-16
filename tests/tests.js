@@ -1,10 +1,13 @@
 /* global document, axe */
 /* eslint-disable prefer-arrow-callback, func-names */
 
+const fs = require('fs-extra');
 const path = require('path');
 const QUnit = require('qunit');
 const server = require('./fixtures/server');
 QUnit.test.inBrowser = require('../index');
+
+QUnit.module('QUnit-In-Browser');
 
 const fixturePath = path.resolve(__dirname, './fixtures');
 QUnit.test.inBrowser('can run a simple test', `file:${fixturePath}/index.html`, function(assert) {
@@ -43,5 +46,39 @@ QUnit.test.inBrowser('can start a server for the duration of the test', {
 }, function(assert) {
 
   assert.equal(document.body.innerText, 'Hello world from a server!');
+
+});
+
+QUnit.test('verify code usage measurements do not exist', function(assert) {
+
+  fs.removeSync('.qunit-in-browser');
+  assert.notOk(fs.existsSync('.qunit-in-browser/code-usage.json'));
+
+});
+
+QUnit.test.inBrowser('can measure code usage and record it', {
+  url: `file:${fixturePath}/index.html`,
+  measureCodeUsage: true,
+}, function(assert) {
+
+  assert.equal(document.body.innerText, 'Hello world!');
+
+});
+
+QUnit.test('verify code usage measurements do exist after test', function(assert) {
+
+  assert.deepEqual(fs.readJsonSync('.qunit-in-browser/code-usage.json'), {
+    js: {
+      totalBytes: 147,
+      usedBytes: 71,
+      percentUsed: 48.29931972789115,
+    },
+    css: {
+      totalBytes: 0,
+      usedBytes: 0,
+      percentUsed: 100,
+    },
+  });
+  fs.removeSync('.qunit-in-browser');
 
 });

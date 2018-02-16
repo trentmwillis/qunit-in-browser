@@ -23,6 +23,8 @@
   },
   "homepage": "https://github.com/trentmwillis/qunit-in-browser#readme",
   "dependencies": {
+    "cli-table": "^0.3.1",
+    "fs-extra": "^5.0.0",
     "puppeteer": "^1.0.0"
   },
   "devDependencies": {
