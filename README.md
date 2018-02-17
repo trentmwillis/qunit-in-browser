@@ -40,6 +40,7 @@ interface InBrowserOptions {
   url: string;
   measureCodeUsage: boolean;
   measurePerformance: boolean;
+  enableScreenshots: boolean;
 }
 
 interface Server {
@@ -55,6 +56,7 @@ interface Server {
 * `url` - A string path to navigate the browser to for the test.
 * `measureCodeUsage` - A boolean denoting whether or not to record code usage stats for the test. The stats will be output in `.qunit-in-browser/code-usage.json` as well as logged to the console.
 * `measurePerformance` - A boolean indicating whether or not to record performance statistics for the test. The stats will be output in `.qunit-in-browser/performance.json` as well logged to the console.
+* `enableScreenshots` - A boolean to enable the ability to take screenshots during your test. Inside your test function, you can invoke `takeScreenshot(id)` which will return a Promise that resolves when the screenshot is finished.
 
 ## Debugging
 

@@ -95,8 +95,6 @@ QUnit.test.inBrowser('can measure code performance and record it', {
   measurePerformance: true,
 }, function(assert) {
 
-  debugger;
-
   assert.equal(document.body.innerText, 'Hello world!');
 
 });
@@ -107,6 +105,30 @@ QUnit.test('verify code performance measurements do exist after test', function(
   assert.equal(typeof performanceMetrics, 'object');
   assert.equal(typeof performanceMetrics.pageMetrics, 'object');
   assert.equal(typeof performanceMetrics.pageTimings, 'object');
+  fs.removeSync('.qunit-in-browser');
+
+});
+
+QUnit.test('verify screenshots do not exist', function(assert) {
+
+  fs.removeSync('.qunit-in-browser');
+  assert.notOk(fs.existsSync('.qunit-in-browser/performance.json'));
+
+});
+
+QUnit.test.inBrowser('can measure code performance and record it', {
+  url: `file:${fixturePath}/index.html`,
+  enableScreenshots: true,
+}, async function(assert) {
+
+  assert.equal(document.body.innerText, 'Hello world!');
+  await takeScreenshot('home'); // eslint-disable-line no-undef
+
+});
+
+QUnit.test('verify screenshots do exist after test', function(assert) {
+
+  assert.ok(fs.existsSync('.qunit-in-browser/home.png'));
   fs.removeSync('.qunit-in-browser');
 
 });

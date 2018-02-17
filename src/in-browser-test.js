@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
 
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 
 const CodeUsage = require('./code-usage');
@@ -54,6 +54,28 @@ async function inBrowserTest(options, test) {
 
   await page.goto(options.url);
 
+  if (options.enableScreenshots) {
+
+    const takeScreenshot = fs.readFileSync(path.resolve(__dirname, './injections/take-screenshot.js'), 'utf-8');
+    await injectScript(page, takeScreenshot);
+    page.on('console', async (msg) => {
+
+      const msgText = msg.text();
+      if (msgText.startsWith('taking screenshot')) {
+
+        const id = msgText.substr('taking screenshot'.length + 1);
+        fs.ensureDirSync('./.qunit-in-browser');
+        await page.screenshot({
+          path: `./.qunit-in-browser/${id}.png`,
+        });
+        await page.evaluate(`resolveScreenshot('${id}');`);
+
+      }
+
+    });
+
+  }
+
   // Construct test scripts to inject into page
   const qunitConfig = `
     QUnit = {
@@ -64,7 +86,6 @@ async function inBrowserTest(options, test) {
   `;
   const qunitPath = require.resolve('qunit');
   const qunit = fs.readFileSync(qunitPath, 'utf-8');
-  const testScript = fs.readFileSync(path.resolve(__dirname, './injections/test-script.js'), 'utf-8').replace('TEST_FUNCTION', test.toString());
 
   // Evaluate test scripts in page
   await injectScript(page, qunitConfig);
@@ -77,6 +98,7 @@ async function inBrowserTest(options, test) {
 
   }
 
+  const testScript = fs.readFileSync(path.resolve(__dirname, './injections/test-script.js'), 'utf-8').replace('TEST_FUNCTION', test.toString());
   const testResult = await injectScript(page, testScript);
   const testData = JSON.parse(testResult);
 
