@@ -1,41 +1,25 @@
-const ChromeRemoteInterface = require('chrome-remote-interface');
-const ChromeLauncher = require('chrome-launcher');
-const { MultiplexServer } = require('chrome-remote-multiplex');
+const puppeteer = require('puppeteer');
 
-const fs = require('fs');
-const isCI = require('is-ci');
+const fs = require('fs-extra');
 const path = require('path');
 
-async function injectScript(Runtime, script, options) {
+const CodeUsage = require('./code-usage');
+const Performance = require('./performance');
 
-  const runtimeOptions = Object.assign({ expression: script }, options);
-  return Runtime.evaluate(runtimeOptions);
+async function injectScript(page, script) {
 
-}
-
-async function openDevTools(chromePort, multiplexerPort) {
-
-  const targets = await ChromeRemoteInterface.List({ port: multiplexerPort });
-  const targetUnderTest = targets[targets.length - 1];
-
-  const debuggerTarget = await ChromeRemoteInterface.New({ port: multiplexerPort });
-  const debuggerInterface = await ChromeRemoteInterface({ target: debuggerTarget });
-
-  const { Page } = debuggerInterface;
-  await Page.navigate({ url: `http://localhost:${chromePort}${targetUnderTest.devtoolsFrontendUrl}` });
-
-  debuggerInterface.close();
+  return page.evaluate(script);
 
 }
 
-async function injectScriptsFromPaths(Runtime, paths) {
+async function injectScriptsFromPaths(page, paths) {
 
   for (let i = 0; i < paths.length; i++) {
 
     const resolvedPath = path.resolve(paths[i]);
     const script = fs.readFileSync(resolvedPath, 'utf-8');
 
-    await injectScript(Runtime, script); // eslint-disable-line no-await-in-loop
+    await injectScript(page, script); // eslint-disable-line no-await-in-loop
 
   }
 
@@ -53,42 +37,44 @@ async function inBrowserTest(options, test) {
   }
 
   // Launch Chrome
-  const chromeOptions = options.browser || {};
+  const chromeOptions = Object.assign({
+    devtools: isDebugging,
+  }, options.browser);
 
-  if (isCI) {
+  const browser = await puppeteer.launch(chromeOptions);
 
-    chromeOptions.chromeFlags = chromeOptions.chromeFlags || [];
-    chromeOptions.chromeFlags.push('--headless', '--disable-gpu');
+  const pages = await browser.pages();
+  const page = pages[0];
 
-  }
+  if (options.measureCodeUsage) {
 
-  const chrome = await ChromeLauncher.launch(chromeOptions);
-
-  // Setup multiplexer for connecting the remote interface and devtools
-  const multiplexer = new MultiplexServer({
-    remoteClient: `localhost:${chrome.port}`,
-    listenPort: chrome.port + 1,
-  });
-  await multiplexer.listen();
-
-  const chromeInterface = await ChromeRemoteInterface({
-    port: multiplexer.options.listenPort,
-  });
-
-  if (isDebugging) {
-
-    await openDevTools(chrome.port, multiplexer.options.listenPort);
+    await CodeUsage.startRecordingCodeUsage(page);
 
   }
 
-  const {
-    Page,
-    Runtime,
-  } = chromeInterface;
+  await page.goto(options.url);
 
-  await Page.enable();
-  await Page.navigate({ url: options.url });
-  await Page.loadEventFired();
+  if (options.enableScreenshots) {
+
+    const takeScreenshot = fs.readFileSync(path.resolve(__dirname, './injections/take-screenshot.js'), 'utf-8');
+    await injectScript(page, takeScreenshot);
+    page.on('console', async (msg) => {
+
+      const msgText = msg.text();
+      if (msgText.startsWith('taking screenshot')) {
+
+        const id = msgText.substr('taking screenshot'.length + 1);
+        fs.ensureDirSync('./.qunit-in-browser');
+        await page.screenshot({
+          path: `./.qunit-in-browser/${id}.png`,
+        });
+        await page.evaluate(`resolveScreenshot('${id}');`);
+
+      }
+
+    });
+
+  }
 
   // Construct test scripts to inject into page
   const qunitConfig = `
@@ -100,25 +86,36 @@ async function inBrowserTest(options, test) {
   `;
   const qunitPath = require.resolve('qunit');
   const qunit = fs.readFileSync(qunitPath, 'utf-8');
-  const testScript = fs.readFileSync(path.resolve(__dirname, './injections/test-script.js'), 'utf-8').replace('TEST_FUNCTION', test.toString());
 
   // Evaluate test scripts in page
-  await injectScript(Runtime, qunitConfig);
-  await injectScript(Runtime, qunit);
+  await injectScript(page, qunitConfig);
+  await injectScript(page, qunit);
 
   const { injections } = options;
   if (injections) {
 
-    await injectScriptsFromPaths(Runtime, injections);
+    await injectScriptsFromPaths(page, injections);
 
   }
 
-  const testResult = await injectScript(Runtime, testScript, { awaitPromise: true });
-  const testData = JSON.parse(testResult.result.value);
+  const testScript = fs.readFileSync(path.resolve(__dirname, './injections/test-script.js'), 'utf-8').replace('TEST_FUNCTION', test.toString());
+  const testResult = await injectScript(page, testScript);
+  const testData = JSON.parse(testResult);
 
-  chromeInterface.close();
-  multiplexer.close();
-  chrome.kill();
+  if (options.measurePerformance) {
+
+    await Performance.recordPerformance(page);
+
+  }
+
+  if (options.measureCodeUsage) {
+
+    await CodeUsage.stopRecordingCodeUsage(page);
+
+  }
+
+  await page.close();
+  await browser.close();
 
   if (server) {
 
